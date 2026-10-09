@@ -78,7 +78,7 @@ cd android
 ./gradlew testDebugUnitTest assembleDebug
 ```
 
-APK output: `android/app/build/outputs/apk/debug/app-debug.apk`. Copy it to `site/dist/downloads/PayDar-beta.apk` before deploying a new downloadable build. This is a debug-signed beta; production signing keys must remain private.
+APK output: `android/app/build/outputs/apk/debug/app-debug.apk`. Publish it as a GitHub Release asset, then update the APK redirect in `firebase.json` and the SHA-256 checksum. Firebase Spark Hosting excludes executable uploads. This is a debug-signed beta; production signing keys must remain private.
 
 For Google sign-in on a build made with your own keystore, register its certificate in Firebase. See [setup and device checks](docs/FIREBASE-SETUP.md).
 
@@ -97,7 +97,7 @@ The Firebase project is `paydar-hydra`; the public Hosting site is `paydar.web.a
 android/       Native Android app, Gradle wrapper and unit tests
 site/dist/     Deployable website, local libraries, fonts and 3D asset
 site/tests/    Website controller tests
- docs/         Feature limits, transaction formats and Firebase setup
+docs/          Feature limits, transaction formats and Firebase setup
 firebase.json  Hosting and authentication configuration
 ```
 
@@ -114,3 +114,4 @@ Tests cover parsing, malformed inputs, duplicate handling, SQLite migration, del
 The phone model is by **MajdyModels**, distributed through [Phone Mockup Studio](https://github.com/quentin-pla/phone-mockup-studio/blob/main/CREDITS.md) under CC BY 4.0, with PayDar screen and material modifications. It illustrates the product; the app is Android-only. Three.js and Anime.js: MIT. Lucide: ISC. Manrope and Oswald: SIL OFL. License texts are in `site/dist/assets/licenses`; [full credits](https://paydar.web.app/credits.html).
 
 Public source availability does not change third-party licenses. No additional blanket reuse license for PayDar branding and original source is granted by this repository.
+

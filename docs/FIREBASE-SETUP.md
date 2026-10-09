@@ -30,3 +30,7 @@ npx -y firebase-tools@latest deploy --only auth,hosting --project paydar-hydra
 ```
 
 No Firestore or financial cloud database is provisioned. Firebase retains account identity until deletion. Before production, test login, cancellation, loss of network, sign-out and account deletion on a physical phone. Automated tests cannot prove those device flows work.
+
+## APK delivery on the free Firebase plan
+
+Firebase Spark Hosting disallows APK executable uploads. `firebase.json` excludes APK files and redirects `/downloads/PayDar-beta.apk` to the GitHub Release asset. Upload a new versioned GitHub release and update the redirect for each release; do not enable billing just to serve the beta.
