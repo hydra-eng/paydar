@@ -33,4 +33,4 @@ No Firestore or financial cloud database is provisioned. Firebase retains accoun
 
 ## APK delivery on the free Firebase plan
 
-Firebase Spark Hosting disallows APK executable uploads. `firebase.json` excludes APK files and redirects `/downloads/PayDar-beta.apk` to the GitHub Release asset. Upload a new versioned GitHub release and update the redirect for each release; do not enable billing just to serve the beta.
+Firebase Spark Hosting disallows APK executable uploads. The site download points to the versioned APK committed in the public repository through `raw.githubusercontent.com`; the GitHub Release remains available for release notes and checksum verification. Update the stable raw URL for each new version; do not enable billing just to serve the beta.

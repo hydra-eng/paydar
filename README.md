@@ -154,7 +154,7 @@ cd android
 ./gradlew testDebugUnitTest assembleDebug
 ```
 
-APK output: `android/app/build/outputs/apk/debug/app-debug.apk`. Publish it as a GitHub Release asset, then update the APK redirect in `firebase.json` and the SHA-256 checksum. Firebase Spark Hosting excludes executable uploads. This is a debug-signed beta; production signing keys must remain private.
+APK output: `android/app/build/outputs/apk/debug/app-debug.apk`. The verified beta is committed as a repository asset because Firebase Spark Hosting excludes executable uploads. Update the stable raw URL in `site/dist/index.html` and the SHA-256 checksum for each new version. This is a debug-signed beta; production signing keys must remain private.
 
 For Google sign-in on a build made with your own keystore, register its certificate in Firebase. See [setup and device checks](docs/FIREBASE-SETUP.md).
 
