@@ -160,7 +160,12 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
     var result by remember { mutableStateOf<Verdict?>(null) }
     var payment by remember { mutableStateOf<Payment?>(null) }
     val history = remember(revision) { store.history() }
-    val transactions = remember(revision) { store.transactions() }
+    val ledgerRevision by TransactionUpdates.version.collectAsState()
+    var transactions by remember { mutableStateOf<List<TransactionRecord>>(emptyList()) }
+    LaunchedEffect(revision, ledgerRevision) {
+        transactions = withContext(Dispatchers.IO) { store.transactions() }
+    }
+    val insights = remember(transactions) { LedgerInsights.summarize(transactions) }
     val subscriptions = remember(revision) { store.subscriptions() }
     val records = remember(revision) { store.records() }
     val reports = remember(revision) { store.reports() }
@@ -334,7 +339,7 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                 Text("PAY", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                 Text("DAR", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp, color = Yellow)
                 Spacer(Modifier.weight(1f))
-                Text("BETA 0.3", color = Muted, fontSize = 11.sp)
+                Text("BETA 0.5", color = Muted, fontSize = 11.sp)
             }
         },
         bottomBar = {
@@ -342,8 +347,8 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                 listOf(
                         Triple("home", "Radar", Icons.Outlined.Radar),
                         Triple("transactions", "Payments", Icons.Outlined.ReceiptLong),
-                        Triple("history", "Checks", Icons.Outlined.History),
-                        Triple("subscriptions", "Subs", Icons.Outlined.NotificationsNone),
+                        Triple("insights", "Insights", Icons.Outlined.BarChart),
+                        Triple("guard", "Guard", Icons.Outlined.Shield),
                         Triple("settings", "Account", Icons.Outlined.AccountCircle),
                     )
                     .forEach { (route, label, icon) ->
@@ -386,15 +391,41 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                 if (busy) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Yellow)
                 if (status.isNotEmpty()) Info(status, Icons.Outlined.Info, action = { status = "" })
                 when (screen) {
+                    "insights" -> {
+                        Eyebrow("YOUR IMPORTED RECEIPTS")
+                        Text("Spending insights", style = MaterialTheme.typography.titleLarge)
+                        Text("This month to date. These totals cover saved receipts, not your bank balance.", color = Muted)
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            LedgerSnapshot("SENT", currency(insights.sent.toPlainString()), Yellow, Modifier.weight(1f))
+                            LedgerSnapshot("RECEIVED", currency(insights.received.toPlainString()), Green, Modifier.weight(1f))
+                        }
+                        Text("Previous full month sent: ${currency(insights.previousSent.toPlainString())}", color = Muted)
+                        SpendingChart(insights)
+                        Eyebrow("SPENDING BY SOURCE · THIS MONTH")
+                        if (insights.apps.isEmpty()) Text("Add successful payment receipts to see your breakdown.", color = Muted)
+                        insights.apps.forEach { (app, amount) ->
+                            SurfaceCard { Text(app, fontWeight = FontWeight.Bold); Text(currency(amount.toPlainString()), color = Yellow) }
+                        }
+                        OutlinedButton(onClick = { navigate("transactions") }) { Text("Manage receipts") }
+                    }
+                    "guard" -> {
+                        Eyebrow("PAYMENT REVIEW")
+                        Text("Keep track of repeat charges", style = MaterialTheme.typography.titleLarge)
+                        Text("Same recipient and amount on different days in the last 90 days. These may be everyday purchases; they are not confirmed subscriptions or duplicate charges.", color = Muted)
+                        if (insights.repeated.isEmpty()) Info("No repeated amounts found in your saved receipts.", Icons.Outlined.ReceiptLong)
+                        insights.repeated.take(30).forEach { (party, rows) ->
+                            SurfaceCard {
+                                Text(party, fontWeight = FontWeight.Bold)
+                                Text("${currency(rows.first().amount)} · ${rows.size} payments", color = Yellow)
+                                Text("Latest: ${day(rows.first().occurred)}", color = Muted, fontSize = 12.sp)
+                            }
+                        }
+                        ToolTile("Subscription tracker", "Review and manage your locally recorded commitments", Icons.Outlined.EventRepeat) { navigate("subscriptions") }
+                        Text("Changing a local record does not cancel a bank mandate. Manage actual mandates in the payment provider’s app.", color = Muted, fontSize = 12.sp)
+                        ToolTile("Payment support", "Prepare details for a payment issue", Icons.Outlined.Undo) { navigate("rescue") }
+                        ToolTile("Check history", "Review your saved recipient checks", Icons.Outlined.History) { navigate("history") }
+                    }
                     "home" -> {
-                        val sentTotal =
-                            transactions
-                                .filter { it.direction == "DEBIT" && it.status == "SUCCEEDED" }
-                                .fold(BigDecimal.ZERO) { total, item -> total + item.amount.toBigDecimal() }
-                        val receivedTotal =
-                            transactions
-                                .filter { it.direction == "CREDIT" && it.status == "SUCCEEDED" }
-                                .fold(BigDecimal.ZERO) { total, item -> total + item.amount.toBigDecimal() }
                         Eyebrow("YOUR PAYMENT RADAR")
                         Text(
                             "CHECK BEFORE\nYOU PAY.",
@@ -447,7 +478,7 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                                 verticalAlignment = Alignment.Top,
                             ) {
                                 Column(Modifier.weight(1f)) {
-                                    Eyebrow("LOCAL LEDGER")
+                                    Eyebrow("THIS MONTH · LOCAL LEDGER")
                                     Text("Your payments.\nOne history.", fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
                                     Text(
                                         "${transactions.size} receipt${if (transactions.size == 1) "" else "s"} · selected sources only",
@@ -457,8 +488,8 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                                 }
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                LedgerSnapshot("SENT", currency(sentTotal.toPlainString()), Yellow, Modifier.weight(1f))
-                                LedgerSnapshot("RECEIVED", currency(receivedTotal.toPlainString()), Green, Modifier.weight(1f))
+                                LedgerSnapshot("SENT", currency(insights.sent.toPlainString()), Yellow, Modifier.weight(1f))
+                                LedgerSnapshot("RECEIVED", currency(insights.received.toPlainString()), Green, Modifier.weight(1f))
                             }
                             Text("No SMS or notification access required. Share, paste, import or add receipts.", color = Muted, fontSize = 11.sp)
                         }
@@ -469,6 +500,8 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                         ) {
                             navigate("transactions")
                         }
+                        SpendingChart(insights)
+                        OutlinedButton(onClick = { navigate("insights") }) { Text("View spending insights") }
                         Eyebrow("YOUR TOOLKIT")
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ToolTile(
@@ -1144,7 +1177,7 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                             Text("Delete local PayDar data", color = Red)
                         }
                         Text(
-                            "PayDar 0.3.0-beta · Team Hydra\nTesting build, not a production fraud protection service.",
+                            "PayDar 0.5.0-beta · Team Hydra\nTesting build, not a production fraud protection service.",
                             fontSize = 12.sp,
                             color = Muted,
                         )
@@ -1477,3 +1510,26 @@ private fun SupportLinks(context: Context) {
     )
 }
 
+
+
+@Composable
+private fun SpendingChart(summary: LedgerSummary) {
+    SurfaceCard {
+        Eyebrow("LAST 7 DAYS · SENT")
+        val peak = summary.days.maxOf { it.sent }.max(BigDecimal.ONE)
+        Row(Modifier.fillMaxWidth().height(120.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+            summary.days.forEach { item ->
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.fillMaxWidth().height((item.sent.divide(peak, 4, java.math.RoundingMode.HALF_UP).toFloat() * 85).coerceAtLeast(2f).dp).background(if (item.sent.signum() > 0) Yellow else Line, RoundedCornerShape(4.dp)))
+                    Text(item.date.format(DateTimeFormatter.ofPattern("EE")), fontSize = 10.sp, color = Muted)
+                }
+            }
+        }
+        summary.days.forEach { item ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(item.date.format(DateTimeFormatter.ofPattern("dd MMM")), color = Muted, fontSize = 12.sp)
+                Text(currency(item.sent.toPlainString()), fontSize = 12.sp)
+            }
+        }
+    }
+}

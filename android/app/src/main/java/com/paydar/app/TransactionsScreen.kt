@@ -223,13 +223,6 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
                 ) {
                     Text("Paste receipt")
                 }
-                OutlinedButton(
-                    onClick = { pasteDialog = true },
-                    enabled = !busy,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("Paste receipt")
-                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 TextButton(

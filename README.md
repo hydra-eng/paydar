@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://paydar.web.app"><strong>Live website</strong></a> ·
-  <a href="https://github.com/hydra-eng/paydar/releases/tag/v0.4.0-beta"><strong>Download Android</strong></a> ·
+  <a href="https://github.com/hydra-eng/paydar/releases/tag/v0.5.0-beta"><strong>Download Android</strong></a> ·
   <a href="docs/FIREBASE-SETUP.md"><strong>Setup guide</strong></a> ·
   <a href="https://github.com/hydra-eng/paydar/issues"><strong>Report an issue</strong></a>
 </p>
@@ -19,7 +19,7 @@ PayDar is an Android payment companion with a Three.js product website. Inspect 
 
 | Release | Platform | Storage | Authentication | Hosting |
 | --- | --- | --- | --- | --- |
-| **0.4.0 beta** | Android 8.0+ | Private SQLite | Optional Google / Firebase | Firebase Hosting |
+| **0.5.0 beta** | Android 8.0+ | Private SQLite | Optional Google / Firebase | Firebase Hosting |
 
 **Explore:** [Capabilities](#product) · [Architecture](#architecture) · [Transaction flow](#transaction-flow) · [Account flow](#account-flow) · [Local setup](#run-locally) · [Deployment](#deployment-flow) · [Roadmap](#roadmap)
 
@@ -33,6 +33,8 @@ PayDar is an Android payment companion with a Three.js product website. Inspect 
 | WrongPay Rescue | Local report drafts and user-initiated sharing to support channels |
 | SubWatcher | Shared/pasted-message parsing, editable recurring entries and manual review |
 | Payments | Shared/pasted receipts, manual records and CSV import/export |
+| Insights | Monthly sent/received totals, previous-month total, seven-day chart and source breakdown |
+| Guard | Repeat-payment review from saved receipts; links to subscription tracking and support |
 | Account | Google sign-in, profile details, sign-out and cloud account deletion |
 | Website | Licensed 3D phone, scroll-driven walkthrough, keyboard controls and reduced-motion support |
 
@@ -48,7 +50,7 @@ flowchart TB
         app --> ledger["Receipt import and deduplication"]
         review --> db[("Private SQLite database")]
         ledger --> db
-        db --> tools["Search · filters · history · reminders"]
+        db --> tools["Search · filters · history · spending insights"]
         db --> export["User-selected CSV or report export"]
     end
     subgraph identity["OPTIONAL ACCOUNT · identity only"]
