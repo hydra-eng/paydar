@@ -6,7 +6,6 @@
 **/node_modules/
 **/.firebase/
 *.log
-*.apk
 *.jks
 *.keystore
 .env*

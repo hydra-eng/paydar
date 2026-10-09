@@ -177,7 +177,7 @@ function setWalkStage(next){
   walkthrough.update?.();
 }
 function syncWalk(){
-  if(!reduced.matches){
+  if(!reduced.matches && getComputedStyle(sticky).position!=='relative'){
     const range=Math.max(1,outer.offsetHeight-sticky.offsetHeight);
     const top=outer.getBoundingClientRect().top-parseFloat(getComputedStyle(sticky).top||0);
     walkthrough.progress=Math.max(0,Math.min(1,-top/range));
@@ -195,7 +195,7 @@ addEventListener('scroll',()=>{if(!scrollFrame)scrollFrame=requestAnimationFrame
 addEventListener('resize',updateScroll);reduced.addEventListener('change',updateScroll);
 document.querySelectorAll('[data-walk]').forEach(el=>el.addEventListener('click',()=>{
   const next=Number(el.dataset.walk);setWalkStage(next);
-  if(!reduced.matches){const range=Math.max(1,outer.offsetHeight-sticky.offsetHeight);scrollTo({top:scrollY+outer.getBoundingClientRect().top-parseFloat(getComputedStyle(sticky).top||0)+range*(next+.5)/3,behavior:'smooth'});}
+  if(!reduced.matches && getComputedStyle(sticky).position!=='relative'){const range=Math.max(1,outer.offsetHeight-sticky.offsetHeight);scrollTo({top:scrollY+outer.getBoundingClientRect().top-parseFloat(getComputedStyle(sticky).top||0)+range*(next+.5)/3,behavior:'smooth'});}
 }));
 setWalkStage(0);updateScroll();
 

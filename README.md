@@ -1,10 +1,27 @@
+<p align="center"><img src="docs/assets/paydar-banner.svg" alt="PayDar — The check before you pay" width="100%"></p>
+
+<p align="center">
+  <a href="https://paydar.web.app"><strong>Live website</strong></a> ·
+  <a href="https://github.com/hydra-eng/paydar/releases/tag/v0.3.0-beta"><strong>Download Android</strong></a> ·
+  <a href="docs/FIREBASE-SETUP.md"><strong>Setup guide</strong></a> ·
+  <a href="https://github.com/hydra-eng/paydar/issues"><strong>Report an issue</strong></a>
+</p>
+
 # PayDar
 
-**The check before you pay.**
+**A clearer view before and after a UPI payment.**
 
 PayDar is an Android payment companion with a Three.js product website. Inspect UPI recipients, review local risk records, collect supported transaction receipts and prepare recovery reports. Optional Google sign-in uses Firebase Authentication; payment records stay on the device.
 
 [Website](https://paydar.web.app) · [Android beta](https://paydar.web.app/downloads/PayDar-beta.apk) · [Privacy](https://paydar.web.app/privacy.html) · [Firebase setup](docs/FIREBASE-SETUP.md)
+
+## At a glance
+
+| Release | Platform | Storage | Authentication | Hosting |
+| --- | --- | --- | --- | --- |
+| **0.3.0 beta** | Android 8.0+ | Private SQLite | Optional Google / Firebase | Firebase Hosting |
+
+**Explore:** [Capabilities](#product) · [Architecture](#architecture) · [Transaction flow](#transaction-flow) · [Account flow](#account-flow) · [Local setup](#run-locally) · [Deployment](#deployment-flow) · [Roadmap](#roadmap)
 
 ## Product
 
@@ -24,20 +41,44 @@ PayDar does not move money, request UPI PINs, verify bank balances or retrieve e
 ## Architecture
 
 ```mermaid
-flowchart LR
-    User[Person using PayDar] --> UI[Android / Jetpack Compose]
-    UI --> Rules[Local parsing and review rules]
-    Rules --> DB[(Private SQLite database)]
-    QR[Camera or QR image] --> Rules
-    Receipts[Consented receipts and imports] --> Rules
-    UI -->|Explicit Google sign-in| CM[Android Credential Manager]
-    CM --> Auth[Firebase Authentication]
-    Auth -->|Account identity| UI
-    UI -->|User initiates export| Files[CSV or recovery report]
-    Website[Three.js + Anime.js website] --> Hosting[Firebase Hosting]
+flowchart TB
+    person["Person using PayDar"] --> app["Android app · Jetpack Compose"]
+    subgraph device["ON THE PHONE · financial data"]
+        app --> review["QR decoding and local review rules"]
+        app --> ledger["Receipt import and deduplication"]
+        review --> db[("Private SQLite database")]
+        ledger --> db
+        db --> tools["Search · filters · history · reminders"]
+        db --> export["User-selected CSV or report export"]
+    end
+    subgraph identity["OPTIONAL ACCOUNT · identity only"]
+        credential["Android Credential Manager"] --> firebase["Firebase Authentication"]
+    end
+    app -->|"User chooses Google sign-in"| credential
+    firebase -->|"Name, email and account ID"| app
+    classDef local fill:#e8ebdf,stroke:#5e6d46,color:#131711
+    classDef account fill:#eee5ff,stroke:#7955ae,color:#251436
+    class app,review,ledger,db,tools,export local
+    class credential,firebase account
 ```
 
 Authentication has no connection to the local financial database. Signing out or switching accounts does not remove or partition this installation's records. Delete cloud identity and local records independently.
+
+## How a check works
+
+```mermaid
+flowchart LR
+    scan["Scan QR or enter UPI ID"] --> parse["Decode and validate"]
+    parse --> compare["Compare recipient details"]
+    compare --> local["Review available local records"]
+    local --> result["Show evidence and limitations"]
+    result --> decision["User independently confirms recipient"]
+    decision --> payment["Payment happens in the user's UPI app"]
+    style result fill:#fff6ce,stroke:#927b19,color:#332c0c
+    style payment fill:#eee5ff,stroke:#7955ae,color:#251436
+```
+
+PayDar stops at review and support. It never initiates a payment or treats an unknown recipient as safe.
 
 ## Transaction flow
 
@@ -54,6 +95,41 @@ flowchart TD
 ```
 
 No sample transactions are inserted into the app. Illustrative website previews are labelled as examples. Read [transaction formats and limitations](docs/TRANSACTIONS.md).
+
+## Account flow
+
+```mermaid
+sequenceDiagram
+    actor Person
+    participant App as PayDar Android
+    participant Google as Google Credential Manager
+    participant Firebase as Firebase Authentication
+    Person->>App: Continue with Google
+    App->>Google: Request Google identity
+    Google-->>Person: Choose an account
+    Person->>Google: Confirm
+    Google-->>App: ID token
+    App->>Firebase: Exchange Google credential
+    Firebase-->>App: Authenticated session
+    App-->>Person: Name, email and account information
+    Note over App,Firebase: Payment records are not sent in this flow
+    Person->>App: Sign out
+    App->>Firebase: End local authenticated session
+    App->>Google: Clear credential state
+    App-->>Person: Local tools remain available
+```
+
+Cloud-account deletion requires confirming the same Google identity. It removes the Firebase user; local records are deleted separately. Signing in does not create a cloud backup.
+
+## Technology
+
+| Layer | Implementation |
+| --- | --- |
+| Android UI | Kotlin 2.4, Jetpack Compose, Material 3 |
+| Local processing | Kotlin rules, ZXing, SQLite, StateFlow |
+| Identity | Credential Manager, Google ID, Firebase Authentication |
+| Website | HTML, CSS, Three.js, Anime.js, Lucide |
+| Delivery | Firebase Hosting, GitHub Releases, Gradle |
 
 ## Run locally
 
@@ -91,6 +167,23 @@ npx -y firebase-tools@latest deploy --only auth,hosting --project paydar-hydra
 
 The Firebase project is `paydar-hydra`; the public Hosting site is `paydar.web.app`. Deployment requires administrator access. Forks should use their own Firebase project and configuration.
 
+## Deployment flow
+
+```mermaid
+flowchart LR
+    source["GitHub · source and documentation"] --> android["Gradle build and tests"]
+    android --> apk["Signed beta APK and SHA-256"]
+    apk --> release["GitHub Release"]
+    source --> web["Website checks"]
+    web --> hosting["Firebase Hosting · paydar.web.app"]
+    hosting -->|"Download redirect"| release
+    source --> auth["Firebase Google provider configuration"]
+    style release fill:#e8ebdf,stroke:#5e6d46,color:#131711
+    style hosting fill:#eee5ff,stroke:#7955ae,color:#251436
+```
+
+These are the release steps, not an automated CI pipeline. The APK is hosted by GitHub because the free Firebase Spark plan does not permit executable uploads. No paid hosting plan is required for this arrangement.
+
 ## Repository structure
 
 ```text
@@ -108,6 +201,20 @@ The PayDar deck defines the black, electric yellow and purple palette. Oswald he
 ## Verification and release limits
 
 Tests cover parsing, malformed inputs, duplicate handling, SQLite migration, deletion and the website walkthrough. Physical-device Google sign-in, notification delivery and full responsive browser QA require separate testing. See [validation](docs/VALIDATION.md). The beta is not a production fraud-protection guarantee or a Play Store release.
+
+## Roadmap
+
+| Priority | Next work | Current boundary |
+| --- | --- | --- |
+| Release readiness | Physical-device sign-in, permissions and accessibility checks | Unit tests do not verify device integrations |
+| Trusted risk data | Licensed provider and authenticated offline updates | Current lists are imported and unverified |
+| Receipt coverage | Broader parser fixtures and verified recurrence detection | Unsupported or redacted receipts may be missed |
+| QR tamper detection | Validated model and field evaluation | Only QR decoding is available |
+| Production distribution | Release signing, target-SDK updates and store permission review | Download is a debug-signed beta |
+
+## Contributing and reporting problems
+
+Include the device/browser version, steps to reproduce, expected result and actual result. Use fictional payment details in examples. Remove account identifiers and financial data from screenshots and logs. Never post passwords, OTPs, tokens or signing keys in an issue.
 
 ## Attribution
 

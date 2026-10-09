@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 
 const source=readFileSync(new URL('../dist/main.js',import.meta.url),'utf8');
 const controller=source.slice(source.indexOf('const walkthrough='),source.indexOf('async function startWalkScene'));
-function fixture(reduce=false){
+function fixture(reduce=false,position='sticky'){
   const node=()=>({style:{},attributes:{},events:{},classList:{toggle(){}},setAttribute(k,v){this.attributes[k]=v;},addEventListener(k,v){this.events[k]=v;}});
   const buttons=Array.from({length:3},(_,i)=>({...node(),dataset:{walk:String(i)}}));
   const captions=Array.from({length:3},node);
@@ -16,7 +16,7 @@ function fixture(reduce=false){
   const context={
     $:s=>nodes[s],reduced:{matches:reduce,addEventListener(){}},
     document:{querySelectorAll:s=>s==='[data-walk]'?buttons:captions,documentElement:{scrollHeight:6000}},
-    getComputedStyle:()=>({top:'76px'}),scrollY:0,innerHeight:800,
+    getComputedStyle:()=>({top:'76px',position}),scrollY:0,innerHeight:800,
     addEventListener:(k,f)=>events[k]=f,requestAnimationFrame:f=>{f();return 1;},scrollTo:v=>scrolls.push(v)
   };
   runInNewContext(controller,context);
@@ -33,6 +33,13 @@ test('walkthrough controls remain functional without loading Three.js',()=>{
 test('reduced motion preserves selected stage without scrolling',()=>{
   const f=fixture(true);f.buttons[1].events.click();f.setTop(-2000);
   assert.equal(f.nodes['#walk-number'].textContent,'02');
+  assert.equal(f.scrolls.length,0);
+});
+
+test('short viewports retain manual stage selection without scroll jumps',()=>{
+  const f=fixture(false,'relative');f.buttons[2].events.click();f.setTop(-2000);
+  assert.equal(f.nodes['#walk-number'].textContent,'03');
+  assert.equal(f.buttons[2].attributes['aria-pressed'],'true');
   assert.equal(f.scrolls.length,0);
 });
 test('scroll stages account for the sticky navigation offset',()=>{

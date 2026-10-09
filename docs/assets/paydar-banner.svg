@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="380" viewBox="0 0 1280 380" role="img" aria-labelledby="title desc">
+<title id="title">PayDar — The check before you pay</title><desc id="desc">Android payment companion. Local records, optional Google sign-in, open development.</desc>
+<rect width="1280" height="380" fill="#080909"/>
+<g fill="none" stroke="#293024"><circle cx="1090" cy="190" r="245"/><circle cx="1090" cy="190" r="180"/><circle cx="1090" cy="190" r="110"/><path d="M810 190h470M1090 0v380"/></g>
+<path d="M1070 140l-44 68h52l-10 59 68-91h-54l25-36z" fill="#af89ff"/>
+<text x="70" y="77" font-family="Arial,sans-serif" font-size="15" letter-spacing="4" fill="#af89ff">ANDROID / LOCAL FIRST</text>
+<text x="64" y="177" font-family="Arial,sans-serif" font-weight="800" font-size="94" letter-spacing="-5" fill="#f1f4ec">PAY<tspan fill="#e5ff00">DAR</tspan></text>
+<text x="70" y="235" font-family="Arial,sans-serif" font-size="30" fill="#f1f4ec">The check before you pay.</text>
+<path d="M70 281h670" stroke="#3b4434"/>
+<text x="70" y="320" font-family="Arial,sans-serif" font-size="16" fill="#a8b09e">RECIPIENT CHECKS   /   UNIFIED RECEIPTS   /   YOUR CONTROL</text>
+<rect x="0" y="370" width="1280" height="10" fill="#e5ff00"/>
+</svg>

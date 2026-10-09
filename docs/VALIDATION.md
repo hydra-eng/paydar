@@ -58,3 +58,9 @@ The beta does not include an authoritative fraud feed, physical QR tamper detect
 - Original earlier screenshots document an earlier version, not this release.
 
 Deployment completed at https://paydar.web.app. HTTP 200 confirmed the updated motion module, Payments section and beta 0.3 label. Public GitHub repository and release assets were verified. Firebase Spark rejects APK uploads, so Hosting redirects the download path to the GitHub Release. The published checksum matches the local APK.
+
+## 10 October 2026 — walkthrough layout correction
+
+User screenshot showed the stage controls crossing the caption metadata. Replaced absolutely positioned, fixed-height captions with overlapping CSS grid items that contribute their natural height. Added explicit separation before controls and a static manual walkthrough for short viewports. Added a visible release strip and contrasting product-update section, versioned app styles/scripts and revalidating Hosting cache headers.
+
+README now includes a branded SVG cover and five Mermaid diagrams: system architecture, QR checking, transaction import, authentication and deployment. Current visual browser QA remains blocked by the existing saved permission setting; the user's screenshot is the visual evidence for this correction.
