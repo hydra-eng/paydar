@@ -1,0 +1,13 @@
+**/.gradle/
+**/.kotlin/
+**/build/
+**/local.properties
+**/.idea/
+**/node_modules/
+**/.firebase/
+*.log
+*.apk
+*.jks
+*.keystore
+.env*
+*service-account*.json

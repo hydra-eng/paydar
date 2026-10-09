@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080909">
+  <title>PayDar — The check before you pay.</title>
+  <meta name="description" content="Meet PayDar. An Android payment companion for QR checks, UPI risk signals, money-mule awareness, recovery reports and subscription tracking. Designed to work on your phone.">
+  <link rel="icon" type="image/png" href="assets/paydar-logo.png">
+  <link rel="preload" href="assets/oswald.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="polish.css"><link rel="stylesheet" href="depth.css">
+  <script type="importmap">{"imports":{"three":"./assets/three.module.js","three/addons/":"./assets/addons/"}}</script>
+  <script src="assets/lucide.js" defer></script><script type="module" src="main.js"></script><script type="module" src="depth.js"></script>
+</head>
+<body>
+<div id="page-progress" aria-hidden="true"></div>
+<a href="#main" class="skip-link">Skip to content</a>
+<header class="header">
+  <a class="brand" href="#" aria-label="PayDar home"><img src="assets/paydar-logo.png" alt="" width="36" height="36"><span>PAY<span>DAR</span></span></a>
+  <nav class="desktop-nav" aria-label="Main navigation"><a href="#features">The toolkit</a><a href="#how">How it works</a><a href="#privacy">Your privacy</a></nav>
+  <a href="#download" class="button small">Get the Android beta <i data-lucide="smartphone"></i></a>
+  <button class="menu-toggle icon-button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-nav"><i data-lucide="menu"></i></button>
+</header>
+<nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation" hidden><a href="#features">The toolkit</a><a href="#how">How it works</a><a href="#privacy">Your privacy</a><a href="#download">Get the Android beta</a></nav>
+<main id="main">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">YOUR PAYMENT RADAR <span class="tag">ANDROID BETA</span></div>
+      <h1>CHECK.<br><span>BEFORE</span><br>YOU PAY.</h1>
+      <p class="hero-description">A closer look at every payment.</p>
+      <p class="muted hero-detail">Inspect UPI recipients, review local risk records, and track recurring charges. Processed on your phone.</p>
+      <div class="hero-actions"><a class="button" href="#download">Get PayDar <i data-lucide="download"></i></a><a class="text-link" href="#demo"><i data-lucide="scan-line"></i> Try a check</a></div>
+      <div class="hero-proof"><span><i data-lucide="wifi-off"></i> Works offline</span><span><i data-lucide="fingerprint"></i> No account needed</span></div>
+    </div>
+    <div class="hero-visual" id="hero-visual">
+      <div class="device-shadow" aria-hidden="true"></div>
+      <div class="radar-disc" aria-hidden="true"><span></span><span></span><span></span><div class="radar-axis"></div></div>
+      <div class="scene-label top"><span>PAYDAR / ON DEVICE</span><span class="studio-dot">3D PREVIEW</span></div>
+      <canvas id="phone-scene" aria-label="Interactive 3D preview of the PayDar application" role="img"></canvas>
+      <div class="phone-fallback" id="phone-fallback"><img src="assets/paydar-logo.png" alt="PayDar"><span>YOUR PAYMENT<br>RADAR.</span><p>CHECK BEFORE YOU PAY</p></div>
+      <div class="device-controls" role="group" aria-label="Phone preview angle"><button data-phone-view="0" aria-pressed="true" disabled>App view</button><button data-phone-view="1" aria-pressed="false" disabled>Device view</button></div>
+      <div class="scene-label bottom"><span>ILLUSTRATIVE HARDWARE</span><span>ANDROID BETA</span></div>
+    </div>
+    <a class="scroll-cue" href="#manifesto"><span>EXPLORE PAYDAR</span><span class="scroll-line"></span></a>
+  </section>
+  <div class="feature-strip" aria-label="PayDar features"><span>SCANSAFE</span><b class="strip-divider" aria-hidden="true"></b><span>FRAUDCHECK</span><b class="strip-divider" aria-hidden="true"></b><span>MULEGUARD</span><b class="strip-divider" aria-hidden="true"></b><span>WRONGPAY RESCUE</span><b class="strip-divider" aria-hidden="true"></b><span>SUBWATCHER</span><b class="strip-divider" aria-hidden="true"></b></div>
+  <section id="manifesto" class="manifesto section-pad">
+    <div class="eyebrow reveal">01 / A BETTER MOMENT TO CHECK</div>
+    <div class="manifesto-grid"><h2 class="reveal">REVIEW FIRST.<br><span class="muted">TRANSFER<br>SECOND.</span></h2><div class="manifesto-body reveal"><p>A replaced QR code.<br>An unfamiliar recipient.<br>An unexpected charge.</p><p class="muted">PayDar brings the relevant details into view before you act. Inspect the recipient, review available records, and make an informed decision.</p><div class="underlined-note"><i data-lucide="shield"></i><span>A companion to your UPI app.<br><strong>You stay in control of every payment.</strong></span></div></div></div>
+  </section>
+  <section id="features" class="toolkit section-pad">
+    <div class="section-heading reveal"><div><div class="eyebrow">02 / THE TOOLKIT</div><h2>FIVE TOOLS.<br><span class="yellow">ONE APP.</span></h2></div><p class="muted">Designed for everyday payments.<br>Built around local processing.</p></div>
+    <div class="toolkit-grid">
+      <div class="feature-tabs" role="tablist" aria-label="Explore PayDar tools" aria-orientation="vertical">
+        <button role="tab" id="tab-scan" aria-controls="feature-panel" aria-selected="true" data-feature="0"><span class="feature-number">01</span><span><strong>ScanSafe</strong><small>Inspect the recipient in a QR code.</small></span><i data-lucide="scan-line"></i></button>
+        <button role="tab" id="tab-fraud" aria-controls="feature-panel" aria-selected="false" tabindex="-1" data-feature="1"><span class="feature-number">02</span><span><strong>FraudCheck</strong><small>Review local risk records.</small></span><i data-lucide="shield-check"></i></button>
+        <button role="tab" id="tab-mule" aria-controls="feature-panel" aria-selected="false" tabindex="-1" data-feature="2"><span class="feature-number">03</span><span><strong>MuleGuard</strong><small>Assess requests to forward money.</small></span><i data-lucide="triangle-alert"></i></button>
+        <button role="tab" id="tab-rescue" aria-controls="feature-panel" aria-selected="false" tabindex="-1" data-feature="3"><span class="feature-number">04</span><span><strong>WrongPay Rescue</strong><small>Prepare a transaction support report.</small></span><i data-lucide="undo-2"></i></button>
+        <button role="tab" id="tab-sub" aria-controls="feature-panel" aria-selected="false" tabindex="-1" data-feature="4"><span class="feature-number">05</span><span><strong>SubWatcher</strong><small>Manage recurring payment records.</small></span><i data-lucide="bell-ring"></i></button>
+      </div>
+      <div class="feature-panel" id="feature-panel" role="tabpanel" aria-labelledby="tab-scan" tabindex="0">
+        <div class="panel-kicker"><span id="panel-tag">SCAN. READ. COMPARE.</span><i data-lucide="scan-line"></i></div>
+        <div id="feature-preview" class="feature-preview"></div>
+        <div class="panel-copy"><h3 id="panel-title">A QR code is not an identity.</h3><p id="panel-description">Scan a UPI QR and inspect the recipient before paying. Compare it with the person or business in front of you.</p><p id="panel-limit" class="fine-print">QR decoding is available. Physical sticker-tamper detection is still in development.</p></div>
+      </div>
+    </div>
+  </section>
+  <section class="connected section-pad" aria-labelledby="connected-title">
+    <div class="eyebrow reveal">NEW IN THE ANDROID BETA</div>
+    <div class="connected-grid">
+      <div class="reveal"><h2 id="connected-title">YOUR RECEIPTS.<br><span class="purple-text">ONE VIEW.</span></h2><p class="connected-lead">Bring supported payment receipts together. Find the reference, review the amount, and keep a record you can export.</p><a class="button outline" href="#download">Explore Payments <i data-lucide="arrow-up-right"></i></a></div>
+      <div class="connected-details reveal">
+        <article><span class="connected-number">01</span><div><h3>Choose your sources.</h3><p>Selected-app notifications, UPI SMS, shared receipts or CSV. Import only what you choose.</p></div></article>
+        <article><span class="connected-number">02</span><div><h3>Review with context.</h3><p>Search by recipient or reference. Filter by app, direction and month. Correct or delete a record.</p></div></article>
+        <article><span class="connected-number">03</span><div><h3>An account, on your terms.</h3><p>Optional Google sign-in keeps account access simple. Payment records stay on this device and do not sync between accounts.</p></div></article>
+        <p class="fine-print">Receipt coverage varies by source. PayDar cannot retrieve every app’s private history or confirm your bank balance.</p>
+      </div>
+    </div>
+  </section>
+  <section id="how" class="how section-pad">
+    <div class="section-heading reveal"><div><div class="eyebrow">03 / THE PAYMENT CHECK</div><h2>SCAN.<br><span class="outline-type">REVIEW. DECIDE.</span></h2></div><p class="muted">A separate check before you pay.<br>Your existing UPI app handles the transfer.</p></div>
+    <div class="walkthrough" id="walkthrough">
+      <div class="walk-sticky">
+        <div class="walk-copy">
+          <div class="walk-index"><span id="walk-number">01</span><span>/ 03</span></div>
+          <div class="walk-captions">
+            <article class="walk-caption active" data-stage="0"><h3>Scan the <br>recipient.</h3><p>Use the camera or import a QR image. PayDar reads the UPI address, amount, and recipient name on your device.</p><span class="walk-caption-meta">CAMERA / IMAGE / MANUAL ENTRY</span></article>
+            <article class="walk-caption" data-stage="1"><h3>Review the <br>details.</h3><p>Compare the decoded address with the intended recipient. Check the available local records and their source.</p><span class="walk-caption-meta">RECIPIENT / AMOUNT / LOCAL RECORDS</span></article>
+            <article class="walk-caption" data-stage="2"><h3>Decide with <br>context.</h3><p>A missing record is not a safety guarantee. Confirm the recipient independently before continuing in your payment app.</p><span class="walk-caption-meta">CLEAR RESULTS / NO AUTOMATIC PAYMENT</span></article>
+          </div>
+          <div class="walk-progress" aria-label="Walkthrough stages"><button class="active" data-walk="0" aria-label="Show scanning stage" aria-pressed="true">01</button><button data-walk="1" aria-label="Show review stage" aria-pressed="false">02</button><button data-walk="2" aria-label="Show result stage" aria-pressed="false">03</button><span class="walk-progress-track"><span id="walk-progress-fill"></span></span></div>
+        </div>
+        <div class="walk-device" id="walk-device"><div class="walk-grid" aria-hidden="true"></div><canvas id="walk-scene" role="img" aria-label="3D walkthrough of the PayDar QR checking flow"></canvas><div class="walk-fallback">Scan the QR. Review the recipient.<br>Check before you pay.</div><span class="walk-device-caption">PAYDAR / APPLICATION PREVIEW</span></div>
+      </div>
+    </div>
+  </section>
+  <section id="demo" class="demo section-pad">
+    <div class="demo-intro reveal"><div class="eyebrow">04 / INTERACTIVE PREVIEW</div><h2>REVIEW A<br><span class="yellow">UPI ID.</span></h2><p class="muted">Explore the local lookup flow.<br>The preview runs in your browser.</p><div class="demo-disclaimer"><i data-lucide="info"></i><p>This preview validates the ID format and explains its limits. It cannot verify a real recipient or tell you a payment is safe.</p></div></div>
+    <div class="demo-console reveal"><div class="console-top"><span>FRAUDCHECK / INTERACTIVE PREVIEW</span><i data-lucide="terminal"></i></div><form id="check-form"><label for="upi-id">Recipient UPI ID</label><div class="input-row"><input id="upi-id" name="upi" placeholder="name@bank" autocomplete="off" spellcheck="false" maxlength="160" required><button class="button" type="submit">Review ID</button></div><div class="sample-actions"><span>FORMAT EXAMPLE</span><button type="button" data-sample="example@bank">example@bank</button></div></form><div id="check-result" class="check-result neutral" role="status" aria-live="polite"><i data-lucide="fingerprint"></i><h3>Ready to review a recipient.</h3><p>Enter an ID to see the format and limitation checks.</p></div><div class="console-bottom"><i data-lucide="wifi-off"></i><span>LOCAL PREVIEW · NO PAYMENT INITIATED</span></div></div>
+  </section>
+  <section id="privacy" class="privacy section-pad">
+    <div class="eyebrow reveal">05 / ON-DEVICE PRIVACY</div><div class="privacy-grid"><div class="privacy-zero reveal" aria-label="Zero payment data uploaded"><span>0</span><div>PAYMENT DATA<br>UPLOADED BY THE APP.</div></div><div class="privacy-copy reveal"><h2>ON YOUR PHONE.<br><span class="purple-text">UNDER YOUR<br>CONTROL.</span></h2><p>Your checks, SMS analysis, and subscription records stay on your device. Optional Google sign-in. No advertising SDK. No cloud payment analysis.</p><ul><li><i data-lucide="hard-drive"></i> Private, on-device storage</li><li><i data-lucide="sliders-horizontal"></i> Permissions you choose</li><li><i data-lucide="trash-2"></i> Delete your local data anytime</li></ul><p class="fine-print">You choose when to share a recovery report or open an external support site. This marketing website is hosted online.</p></div></div>
+  </section>
+  <section class="faq section-pad"><div class="reveal"><div class="eyebrow">PRODUCT INFORMATION</div><h2>FREQUENT<br><span class="muted">QUESTIONS.</span></h2></div><div class="faq-list reveal">
+    <details><summary>Does PayDar make payments?<i data-lucide="plus"></i></summary><p>No. PayDar is a checking companion. You continue to make payments in your existing UPI app. PayDar never asks for your UPI PIN or bank password.</p></details>
+    <details><summary>Does “not found” mean safe?<i data-lucide="plus"></i></summary><p>No. A local list can be incomplete or outdated. An unknown ID remains unverified. Always confirm the recipient independently, including the recipient name in your payment app.</p></details>
+    <details><summary>What works in the Android beta?<i data-lucide="plus"></i></summary><p>QR decoding, local ID lookup, the MuleGuard questionnaire, recovery report creation, subscription tracking, local reminders and unified transaction history. The Payments tab supports selected-app receipt notifications, UPI SMS, pasted/shared receipts, manual entries and PayDar-format CSV. Authoritative fraud feeds, physical QR tamper detection and on-device LLM inference are not active in this beta.</p></details>
+    <details><summary>Will it read all my messages?<i data-lucide="plus"></i></summary><p>Only if you explicitly grant SMS access and start an import. You can instead paste individual payment messages. Processing happens locally, and you can delete the saved records.</p></details>
+    <details><summary>Can it recover a wrong payment?<i data-lucide="plus"></i></summary><p>It helps you prepare a report and find official support channels. It cannot reverse a transaction, automatically submit a dispute, or guarantee a refund. Your payment provider or bank handles the case.</p></details>
+    <details><summary>Is there an iPhone version?<i data-lucide="plus"></i></summary><p>This first version is built for Android. iPhone support is not available. SMS inbox access and some device features would require a different approach on iOS.</p></details>
+  </div></section>
+  <section id="download" class="download section-pad"><div class="eyebrow">PAYDAR / ANDROID EARLY ACCESS</div><div class="download-grid"><h2>CHECK BEFORE<br><span>YOU PAY.</span></h2><div><a class="button dark" id="apk-download" href="downloads/PayDar-beta.apk" download>Download Android beta <i data-lucide="download"></i></a><p>Android 8.0+ · Beta 0.3.0<br>Install only on a device you trust.</p><a class="download-notes" href="release-notes.html">Read beta limitations &amp; installation notes</a></div></div><div class="download-rule"><span>NO ACCOUNT REQUIRED. NO BANK CONNECTION.</span><i data-lucide="scan-line"></i></div></section>
+</main>
+<footer><a class="brand" href="#"><img src="assets/paydar-logo.png" alt="" width="32" height="32"><span>PAY<span>DAR</span></span></a><p>Built by Team Hydra.<br><span class="muted">Akshith J · Prajval K · Johith Reddy</span></p><div><a href="privacy.html">Privacy</a><a href="credits.html">Credits</a><span class="muted">© 2026 PayDar</span></div></footer>
+</body></html>

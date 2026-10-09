@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "771322522759",
+    "project_id": "paydar-hydra",
+    "storage_bucket": "paydar-hydra.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:771322522759:android:10845627bcca4754a29c22",
+        "android_client_info": {
+          "package_name": "com.paydar.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "771322522759-eac2v9ntnonnjbap95c8fjto6m7k5i8s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.paydar.app",
+            "certificate_hash": "dbd8015470fd85c74b95ea734a3167d9b541f3ef"
+          }
+        },
+        {
+          "client_id": "771322522759-84lj5c33cdfcir9bg00ba2724upbcmme.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARdpc8BZTf782z5XgCL1XXnMAw_i5cmcI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "771322522759-84lj5c33cdfcir9bg00ba2724upbcmme.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
