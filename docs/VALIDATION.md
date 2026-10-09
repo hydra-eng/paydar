@@ -41,7 +41,7 @@ Date: 6 October 2026. This records observed checks, not a production certificati
 
 The merged APK manifest was inspected to confirm INTERNET and ACCESS_NETWORK_STATE are absent. The final APK checksum is in `site/dist/downloads/SHA256SUMS.txt`. The app has no seeded payment history, subscriptions or fictional fraud list.
 
-No Android device was attached. Camera focus/scanning, system photo selection, SMS permission prompts, share sheets, notification delivery and reboot scheduling still require physical-device testing. A successful build and JVM tests do not establish those device behaviors.
+No Android device was attached. Camera focus/scanning, system photo selection and share sheets still require physical-device testing. This build deliberately has no SMS or notification permission prompts. A successful build and JVM tests do not establish all device behaviors.
 
 ## Remaining production work
 
@@ -52,7 +52,7 @@ The beta does not include an authoritative fraud feed, physical QR tamper detect
 - Google authentication SDK integrated with Android Credential Manager. Google provider deployed in `paydar-hydra`; the installed beta SHA-1 is registered. Google OAuth configuration was downloaded from Firebase.
 - Kotlin upgraded to 2.4.0 with the Compose compiler plugin; Android Gradle Plugin upgraded to 8.5.2 for Firebase SDK compatibility.
 - `testDebugUnitTest assembleDebug`: successful. 45 tests passed, zero failures/errors. Four website controller tests passed; JavaScript syntax checks passed.
-- APK signature verified and matches the prior beta. Package `com.paydar.app`, version 0.3.0-beta / code 3, minimum SDK 26.
+- APK signature verified. Package `com.paydar.app`, version 0.4.0-beta / code 4, minimum SDK 26. SMS, notification and notification-listener permissions are absent from the merged manifest.
 - Added stronger 3D rotation/depth during scroll, scroll-linked panel motion, responsive type/spacing and a Payments/account section. Motion preference changes are respected.
 - Google sign-in, cancellation and deletion on a physical phone remain unverified. No device is connected. Recent browser permission denial still blocks visual responsive QA; source/controller checks are not a substitute for screenshots.
 - Original earlier screenshots document an earlier version, not this release.

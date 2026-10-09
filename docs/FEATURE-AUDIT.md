@@ -8,14 +8,14 @@ The original deck is a product concept. Its five core tools exist in the beta, w
 | FraudCheck | Imported local lists, source/expiry display, unknown verdicts, check history | Licensed ScamDekho or other authoritative feed, authenticated offline updates, coverage/expiry policy |
 | MuleGuard | Three-question rules with explanations | Expert validation and multilingual field testing; AI pattern inference is absent |
 | WrongPay Rescue | Saved support drafts, share sheet and official escalation link | Provider integration for actual filing and case-status tracking |
-| SubWatcher | Local SMS/paste parsing, user-confirmed records, monthly estimates, reminders | Model-based extraction, verified recurrence detection across billing periods, personalized on-device language generation |
+| SubWatcher | Shared/pasted-message parsing, user-confirmed records, monthly estimates and manual review | Verified recurrence detection across billing periods, personalized on-device language generation |
 | On-device AI | Transparent rules only | Real licensed Gemma/Phi model, LiteRT/runtime integration and Snapdragon/NPU evaluation; sub-800 ms performance is unmeasured |
 | Binary “safe to pay” verdict | Unknown remains unverified | A safe verdict is intentionally not issued from an incomplete list; broader data/model coverage still cannot guarantee every payment |
 | Production launch | Installable debug APK | Device testing, release signing, current target-SDK/store compliance and restricted-SMS permission review |
 
 ## Added: unified transaction history
 
-Android beta 0.2.0 adds a Payments tab and a Transactions tile on the home screen. It combines supported payment receipts from selected app notifications, consent-based UPI SMS imports, pasted/shared text, manual entries and PayDar-format CSV.
+Android beta 0.2.0 adds a Payments tab and a Transactions tile on the home screen. The permissionless beta combines supported payment receipts from shared/pasted text, manual entries and PayDar-format CSV.
 
 The history includes amount, direction, receipt status, counterparty, UPI ID when present, payment app when known, timestamp, reference and source. It offers search, app/direction/month filters, successful-receipt totals, correction, deletion and CSV export. All records are stored in the existing private SQLite database; upgrading from beta 0.1 preserves prior records.
 

@@ -2,10 +2,6 @@
 
 package com.paydar.app
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -23,13 +19,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.time.Instant
@@ -81,30 +73,8 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
     var selected by remember { mutableStateOf<TransactionRecord?>(null) }
     var newEntry by remember { mutableStateOf(false) }
     var pasteDialog by remember { mutableStateOf(incomingReceipt.isNotBlank()) }
-    var smsConsent by remember { mutableStateOf(false) }
-    var captureDialog by remember { mutableStateOf(false) }
     var deleteEntry by remember { mutableStateOf<TransactionRecord?>(null) }
     var exportData by remember { mutableStateOf("") }
-    var captureEnabled by remember { mutableStateOf(PaymentCapture.enabled(context)) }
-    var access by remember { mutableStateOf(false) }
-    fun refreshAccess() {
-        access =
-            androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(context)
-                .contains(context.packageName)
-        captureEnabled = PaymentCapture.enabled(context)
-    }
-    val owner = LocalLifecycleOwner.current
-    DisposableEffect(owner) {
-        val lifecycle = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                refreshAccess()
-                revision++
-            }
-        }
-        owner.lifecycle.addObserver(lifecycle)
-        refreshAccess()
-        onDispose { owner.lifecycle.removeObserver(lifecycle) }
-    }
     LaunchedEffect(revision, changes) {
         records = withContext(Dispatchers.IO) { store.transactions() }
     }
@@ -124,44 +94,6 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
             }
         }
     }
-    fun importSms() = work {
-        var inspected = 0
-        var skipped = 0
-        val found = mutableListOf<TransactionRecord>()
-        val cutoff = System.currentTimeMillis() - 90L * 24 * 60 * 60 * 1000
-        context.contentResolver
-            .query(
-                Uri.parse("content://sms/inbox"),
-                arrayOf("body", "date"),
-                "date >= ?",
-                arrayOf(cutoff.toString()),
-                "date DESC",
-            )
-            ?.use { c ->
-                while (c.moveToNext() && inspected < 1000) {
-                    inspected++
-                    val text = c.getString(0).orEmpty()
-                    val receipt =
-                        if (
-                            Regex("\\bUPI\\b|[A-Za-z0-9._-]+@[A-Za-z]", RegexOption.IGNORE_CASE)
-                                .containsMatchIn(text)
-                        )
-                            TransactionEngine.parseReceipt(text, c.getLong(1), "SMS")
-                        else null
-                    if (receipt != null) found.add(receipt) else skipped++
-                }
-            }
-            ?: error(
-                "This device has no readable SMS inbox. Paste a receipt or import CSV instead."
-            )
-        val result = ledgerWrite { store.importTransactions(found) }
-        "Reviewed $inspected messages from the last 90 days (maximum 1,000). ${result.first} added, ${result.second} matched existing references; $skipped unsupported or non-UPI messages ignored."
-    }
-    val smsPermission =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) importSms()
-            else message = "SMS permission declined. Paste a receipt or import a CSV instead."
-        }
     val csvPicker =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null)
@@ -238,7 +170,7 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
         }
         item {
             Text(
-                "A local record of imported receipts. Coverage depends on the messages and notifications available on this phone. Receipt status is not bank verification.",
+                "A local record of receipts you choose to share, paste, import or add. Receipt status is not bank verification.",
                 color = LedgerMuted,
                 fontSize = 13.sp,
                 lineHeight = 20.sp,
@@ -276,21 +208,7 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
             LedgerCard {
                 Text("Collect new receipts", fontWeight = FontWeight.Bold)
                 Text(
-                    if (captureEnabled && access) "Payment notification capture is enabled."
-                    else "Payment notification capture is off or Android access is missing.",
-                    color = LedgerMuted,
-                    fontSize = 12.sp,
-                )
-                OutlinedButton(
-                    onClick = { captureDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Icon(Icons.Outlined.NotificationsNone, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Manage payment apps")
-                }
-                Text(
-                    "Captures supported new notifications after you opt in. It cannot retrieve past in-app histories.",
+                    "PayDar does not request notification or SMS access. Share a receipt from your payment app, paste the text, import a CSV, or add a record manually.",
                     color = LedgerMuted,
                     fontSize = 11.sp,
                 )
@@ -299,11 +217,11 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(
-                    onClick = { smsConsent = true },
+                    onClick = { pasteDialog = true },
                     enabled = !busy,
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text("Import SMS")
+                    Text("Paste receipt")
                 }
                 OutlinedButton(
                     onClick = { pasteDialog = true },
@@ -411,7 +329,7 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
                     )
                     Text(
                         if (records.isEmpty())
-                            "Import your UPI SMS, paste a receipt, add a record, or enable capture for the payment apps you use. No sample transactions are added."
+                            "Share a receipt from your payment app, paste it here, import a CSV, or add a record manually. No sample transactions are added."
                         else "Adjust the search or filters to see your records.",
                         fontSize = 13.sp,
                         color = LedgerMuted,
@@ -477,34 +395,6 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
             }
             pasteDialog = false
         }
-    if (smsConsent)
-        AlertDialog(
-            onDismissRequest = { smsConsent = false },
-            title = { Text("Import UPI payment SMS?") },
-            text = {
-                Text(
-                    "PayDar will inspect up to 1,000 inbox messages from the last 90 days locally. Only extracted transaction fields and duplicate fingerprints are stored. OTPs, requests, unrelated and unsupported messages are ignored. You can paste receipts or import CSV instead."
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        smsConsent = false
-                        if (
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.READ_SMS,
-                            ) == PackageManager.PERMISSION_GRANTED
-                        )
-                            importSms()
-                        else smsPermission.launch(Manifest.permission.READ_SMS)
-                    }
-                ) {
-                    Text("Continue")
-                }
-            },
-            dismissButton = { TextButton(onClick = { smsConsent = false }) { Text("Cancel") } },
-        )
     if (deleteEntry != null)
         AlertDialog(
             onDismissRequest = { deleteEntry = null },
@@ -529,13 +419,6 @@ fun TransactionsScreen(store: LocalStore, incomingReceipt: String = "", onCheck:
                 }
             },
             dismissButton = { TextButton(onClick = { deleteEntry = null }) { Text("Keep") } },
-        )
-    if (captureDialog)
-        CaptureSettings(
-            onDismiss = {
-                captureDialog = false
-                refreshAccess()
-            }
         )
 }
 
@@ -741,91 +624,3 @@ private fun ReceiptPaste(
     )
 }
 
-@Composable
-private fun CaptureSettings(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    var chosen by remember { mutableStateOf(PaymentCapture.selected(context)) }
-    var enabled by remember { mutableStateOf(PaymentCapture.enabled(context)) }
-    var custom by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Payment notification access") },
-        text = {
-            Column(
-                Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(
-                    "Android notification access can expose notification content from all apps. PayDar processes only the payment apps you select below, ignores OTPs and requests, and stores extracted receipt fields locally. No payment data is uploaded. Access is optional and can be revoked in Android settings.",
-                    fontSize = 12.sp,
-                    color = LedgerMuted,
-                )
-                (TransactionEngine.paymentApps.keys + chosen).distinct().forEach { pkg ->
-                    Row {
-                        Checkbox(
-                            checked = pkg in chosen,
-                            onCheckedChange = { checked ->
-                                PaymentCapture.select(context, pkg, checked)
-                                chosen = PaymentCapture.selected(context)
-                            },
-                        )
-                        Text(
-                            PaymentCapture.label(pkg),
-                            modifier = Modifier.padding(top = 13.dp),
-                            fontSize = 13.sp,
-                        )
-                    }
-                }
-                LedgerField("Another payment app's package name", custom) { custom = it.take(160) }
-                TextButton(
-                    onClick = {
-                        try {
-                            PaymentCapture.select(context, custom.trim(), true)
-                            chosen = PaymentCapture.selected(context)
-                            custom = ""
-                            error = ""
-                        } catch (e: Exception) {
-                            error = e.message.orEmpty()
-                        }
-                    }
-                ) {
-                    Text("Add payment app")
-                }
-                if (error.isNotEmpty()) Text(error, color = LedgerRed, fontSize = 12.sp)
-                Row {
-                    Switch(
-                        checked = enabled,
-                        onCheckedChange = { checked ->
-                            synchronized(PaymentCapture) {
-                                PaymentCapture.setEnabled(context, checked)
-                            }
-                            enabled = checked
-                        },
-                    )
-                    Text(
-                        "Capture selected apps",
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(start = 12.dp, top = 12.dp),
-                    )
-                }
-                Text(
-                    "New supported payment notifications only. Missing details or disabled notifications can leave gaps. SMS often cannot identify which UPI app made the payment.",
-                    fontSize = 11.sp,
-                    color = LedgerMuted,
-                )
-                OutlinedButton(
-                    onClick = {
-                        context.startActivity(
-                            android.content.Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Open Android notification access")
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
-    )
-}

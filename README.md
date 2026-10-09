@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://paydar.web.app"><strong>Live website</strong></a> ·
-  <a href="https://github.com/hydra-eng/paydar/releases/tag/v0.3.0-beta"><strong>Download Android</strong></a> ·
+  <a href="https://github.com/hydra-eng/paydar/releases/tag/v0.4.0-beta"><strong>Download Android</strong></a> ·
   <a href="docs/FIREBASE-SETUP.md"><strong>Setup guide</strong></a> ·
   <a href="https://github.com/hydra-eng/paydar/issues"><strong>Report an issue</strong></a>
 </p>
@@ -19,7 +19,7 @@ PayDar is an Android payment companion with a Three.js product website. Inspect 
 
 | Release | Platform | Storage | Authentication | Hosting |
 | --- | --- | --- | --- | --- |
-| **0.3.0 beta** | Android 8.0+ | Private SQLite | Optional Google / Firebase | Firebase Hosting |
+| **0.4.0 beta** | Android 8.0+ | Private SQLite | Optional Google / Firebase | Firebase Hosting |
 
 **Explore:** [Capabilities](#product) · [Architecture](#architecture) · [Transaction flow](#transaction-flow) · [Account flow](#account-flow) · [Local setup](#run-locally) · [Deployment](#deployment-flow) · [Roadmap](#roadmap)
 
@@ -31,8 +31,8 @@ PayDar is an Android payment companion with a Three.js product website. Inspect 
 | FraudCheck | Local imported risk records, source details and official suspect-search handoff |
 | MuleGuard | Three-question educational assessment with explained signals |
 | WrongPay Rescue | Local report drafts and user-initiated sharing to support channels |
-| SubWatcher | SMS/pasted-message import, editable recurring entries and local reminders |
-| Payments | Selected-app notifications, SMS, shared/pasted receipts, manual records and CSV import/export |
+| SubWatcher | Shared/pasted-message parsing, editable recurring entries and manual review |
+| Payments | Shared/pasted receipts, manual records and CSV import/export |
 | Account | Google sign-in, profile details, sign-out and cloud account deletion |
 | Website | Licensed 3D phone, scroll-driven walkthrough, keyboard controls and reduced-motion support |
 
@@ -84,9 +84,7 @@ PayDar stops at review and support. It never initiates a payment or treats an un
 
 ```mermaid
 flowchart TD
-    Input[Notification / SMS / paste / CSV / manual entry] --> Consent{User selected or permitted this source?}
-    Consent -->|No| Stop[Do not import]
-    Consent -->|Yes| Parse[Parse supported receipt fields]
+    Input[Share / paste / CSV / manual entry] --> Parse[Parse supported receipt fields]
     Parse --> Valid{Valid amount, direction and date?}
     Valid -->|No| Ignore[Skip unsupported record]
     Valid -->|Yes| Dedupe[Reference and fingerprint duplicate checks]
@@ -200,7 +198,7 @@ The PayDar deck defines the black, electric yellow and purple palette. Oswald he
 
 ## Verification and release limits
 
-Tests cover parsing, malformed inputs, duplicate handling, SQLite migration, deletion and the website walkthrough. Physical-device Google sign-in, notification delivery and full responsive browser QA require separate testing. See [validation](docs/VALIDATION.md). The beta is not a production fraud-protection guarantee or a Play Store release.
+Tests cover parsing, malformed inputs, duplicate handling, SQLite migration, deletion and the website walkthrough. Physical-device Google sign-in, share flows and full responsive browser QA require separate testing. This build does not request SMS or notification access. See [validation](docs/VALIDATION.md). The beta is not a production fraud-protection guarantee or a Play Store release.
 
 ## Roadmap
 

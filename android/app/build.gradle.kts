@@ -6,8 +6,8 @@ android {
         applicationId = "com.paydar.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.3.0-beta"
+        versionCode = 4
+        versionName = "0.4.0-beta"
     }
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }

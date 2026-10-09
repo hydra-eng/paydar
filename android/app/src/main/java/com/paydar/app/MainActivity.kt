@@ -156,11 +156,11 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
     var revision by remember { mutableIntStateOf(0) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    var smsConsent by remember { mutableStateOf(false) }
     var deleteDialog by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<Verdict?>(null) }
     var payment by remember { mutableStateOf<Payment?>(null) }
     val history = remember(revision) { store.history() }
+    val transactions = remember(revision) { store.transactions() }
     val subscriptions = remember(revision) { store.subscriptions() }
     val records = remember(revision) { store.records() }
     val reports = remember(revision) { store.reports() }
@@ -171,7 +171,7 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 revision++
-                Reminders.schedule(context)
+                // PayDar intentionally does not request or schedule notification access.
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -277,79 +277,6 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                         busy = false
                     }
                 }
-        }
-    fun importSms() {
-        scope.launch {
-            busy = true
-            try {
-                val counts =
-                    withContext(Dispatchers.IO) {
-                        var matched = 0
-                        var added = 0
-                        var inspected = 0
-                        val cutoff = System.currentTimeMillis() - 90L * 24 * 60 * 60 * 1000
-                        LocalStore(context.applicationContext).use { importStore ->
-                            context.contentResolver
-                                .query(
-                                    Uri.parse("content://sms/inbox"),
-                                    arrayOf("body", "date"),
-                                    "date >= ?",
-                                    arrayOf(cutoff.toString()),
-                                    "date DESC",
-                                )
-                                ?.use { cursor ->
-                                    while (cursor.moveToNext() && inspected < 1000) {
-                                        inspected++
-                                        val text = cursor.getString(0).orEmpty()
-                                        val parsed = PayDarEngine.parseSms(text)
-                                        if (parsed != null) {
-                                            matched++
-                                            val date =
-                                                Instant.ofEpochMilli(cursor.getLong(1))
-                                                    .atZone(ZoneId.systemDefault())
-                                                    .toLocalDate()
-                                            if (importStore.importMessage(parsed, date)) added++
-                                        }
-                                    }
-                                } ?: error("SMS inbox is unavailable on this device.")
-                        }
-                        Triple(inspected, matched, added)
-                    }
-                revision++
-                status =
-                    "Reviewed ${counts.first} recent messages locally. ${counts.second} matched; ${counts.third} new message records added. Review merchants, amounts and estimated renewal dates."
-                screen = "subscriptions"
-            } catch (_: SecurityException) {
-                status =
-                    "SMS access was not granted. You can paste individual payment messages instead."
-            } catch (_: Exception) {
-                status = "SMS import could not complete. Try pasting individual payment messages."
-            } finally {
-                busy = false
-            }
-        }
-    }
-    val smsPermission =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) importSms()
-            else {
-                status =
-                    "SMS permission declined. Paste messages instead, or grant access later in Android settings."
-            }
-        }
-    val notificationPermission =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                Reminders.setEnabled(context, true)
-                revision++
-                status =
-                    "Local review reminders are enabled. Delivery time may vary with Android battery settings."
-            } else {
-                Reminders.setEnabled(context, false)
-                revision++
-                status =
-                    "Notifications are disabled. Subscription tracking still works. Enable notifications in Android settings to receive reminders."
-            }
         }
     val feedPicker =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -460,6 +387,14 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                 if (status.isNotEmpty()) Info(status, Icons.Outlined.Info, action = { status = "" })
                 when (screen) {
                     "home" -> {
+                        val sentTotal =
+                            transactions
+                                .filter { it.direction == "DEBIT" && it.status == "SUCCEEDED" }
+                                .fold(BigDecimal.ZERO) { total, item -> total + item.amount.toBigDecimal() }
+                        val receivedTotal =
+                            transactions
+                                .filter { it.direction == "CREDIT" && it.status == "SUCCEEDED" }
+                                .fold(BigDecimal.ZERO) { total, item -> total + item.amount.toBigDecimal() }
                         Eyebrow("YOUR PAYMENT RADAR")
                         Text(
                             "CHECK BEFORE\nYOU PAY.",
@@ -504,6 +439,28 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                                     modifier = Modifier.size(38.dp),
                                 )
                             }
+                        }
+                        SurfaceCard {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top,
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Eyebrow("LOCAL LEDGER")
+                                    Text("Your payments.\nOne history.", fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "${transactions.size} receipt${if (transactions.size == 1) "" else "s"} · selected sources only",
+                                        color = Muted,
+                                        fontSize = 12.sp,
+                                    )
+                                }
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                LedgerSnapshot("SENT", currency(sentTotal.toPlainString()), Yellow, Modifier.weight(1f))
+                                LedgerSnapshot("RECEIVED", currency(receivedTotal.toPlainString()), Green, Modifier.weight(1f))
+                            }
+                            Text("No SMS or notification access required. Share, paste, import or add receipts.", color = Muted, fontSize = 11.sp)
                         }
                         ToolTile(
                             "Transactions",
@@ -937,11 +894,11 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedButton(
-                                onClick = { smsConsent = true },
+                                onClick = { status = "SMS access is intentionally not used. Paste a payment message above or share it to PayDar from your messaging app." },
                                 enabled = !busy,
                                 modifier = Modifier.weight(1f),
                             ) {
-                                Text("Import SMS")
+                                Text("Use paste instead")
                             }
                             OutlinedButton(
                                 onClick = {
@@ -1135,33 +1092,11 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                         SurfaceCard {
                             Eyebrow("LOCAL REVIEW REMINDERS")
                             Text(
-                                "A discreet reminder around 9 AM for charges due within two days. Android may delay delivery.",
+                                "PayDar does not request notification permission. Open SubWatcher when you want to review upcoming charges.",
                                 fontSize = 14.sp,
                                 color = Muted,
                             )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Enable reminders", Modifier.weight(1f))
-                                Switch(
-                                    checked = Reminders.enabled(context),
-                                    onCheckedChange = { on ->
-                                        if (
-                                            on &&
-                                                Build.VERSION.SDK_INT >= 33 &&
-                                                ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.POST_NOTIFICATIONS,
-                                                ) != PackageManager.PERMISSION_GRANTED
-                                        )
-                                            notificationPermission.launch(
-                                                Manifest.permission.POST_NOTIFICATIONS
-                                            )
-                                        else {
-                                            Reminders.setEnabled(context, on)
-                                            revision++
-                                        }
-                                    },
-                                )
-                            }
+                            IntegrationRow("Review mode", "Manual · no notifications", Muted)
                         }
                         SurfaceCard {
                             Eyebrow("IMPORT A LOCAL RISK LIST")
@@ -1198,7 +1133,7 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                         SurfaceCard {
                             Eyebrow("YOU CONTROL WHAT LEAVES")
                             Text(
-                                "Google sign-in sends account information to Google and Firebase. Sharing a report or opening an external support page hands control to another app. PayDar does not send your payment data to a server. Raw SMS messages are processed in memory and not saved; only extracted records and duplicate fingerprints are stored.",
+                                "Google sign-in sends account information to Google and Firebase. Sharing a report or opening an external support page hands control to another app. PayDar does not request SMS or notification access and does not read those data sources. Paste or share a receipt when you choose.",
                                 fontSize = 14.sp,
                                 color = Muted,
                             )
@@ -1217,43 +1152,13 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                 }
             }
     }
-    if (smsConsent)
-        AlertDialog(
-            onDismissRequest = { smsConsent = false },
-            title = { Text("Read payment SMS locally?") },
-            text = {
-                Text(
-                    "With your permission, PayDar will review up to 1,000 inbox messages from the last 90 days on this phone. Only extracted merchant/amount/date records are saved. OTPs and unsupported messages are ignored. You can paste messages instead."
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        smsConsent = false
-                        if (
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.READ_SMS,
-                            ) == PackageManager.PERMISSION_GRANTED
-                        )
-                            importSms()
-                        else smsPermission.launch(Manifest.permission.READ_SMS)
-                    }
-                ) {
-                    Text("Continue")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { smsConsent = false }) { Text("Use paste instead") }
-            },
-        )
     if (deleteDialog)
         AlertDialog(
             onDismissRequest = { deleteDialog = false },
             title = { Text("Delete all local data?") },
             text = {
                 Text(
-                    "This permanently removes check history, transaction receipts, subscription records, imported lists and recovery drafts from PayDar. Reminders and payment notification capture will be disabled. Files you previously shared to other apps are not affected."
+                            "This permanently removes check history, transaction receipts, subscription records, imported lists and recovery drafts from PayDar. Files you previously shared to other apps are not affected."
                 )
             },
             confirmButton = {
@@ -1263,10 +1168,6 @@ private fun PayDar(store: LocalStore, initialScreen: String, incomingReceipt: St
                             PaymentCapture.reset(context)
                             store.clearAll()
                         }
-                        Reminders.setEnabled(context, false)
-                        context
-                            .getSystemService(android.app.NotificationManager::class.java)
-                            .cancelAll()
                         revision++
                         raw = ""
                         result = null
@@ -1313,6 +1214,14 @@ private fun SurfaceCard(content: @Composable ColumnScope.() -> Unit) {
             verticalArrangement = Arrangement.spacedBy(13.dp),
             content = content,
         )
+    }
+}
+
+@Composable
+private fun LedgerSnapshot(label: String, value: String, tint: Color, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        Text(label, color = Muted, fontSize = 9.sp, letterSpacing = 1.sp)
+        Text(value, color = tint, fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
 }
 
