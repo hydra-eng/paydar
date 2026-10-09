@@ -56,3 +56,5 @@ The beta does not include an authoritative fraud feed, physical QR tamper detect
 - Added stronger 3D rotation/depth during scroll, scroll-linked panel motion, responsive type/spacing and a Payments/account section. Motion preference changes are respected.
 - Google sign-in, cancellation and deletion on a physical phone remain unverified. No device is connected. Recent browser permission denial still blocks visual responsive QA; source/controller checks are not a substitute for screenshots.
 - Original earlier screenshots document an earlier version, not this release.
+
+Deployment completed at https://paydar.web.app. HTTP 200 confirmed the updated motion module, Payments section and beta 0.3 label. Public GitHub repository and release assets were verified. Firebase Spark rejects APK uploads, so Hosting redirects the download path to the GitHub Release. The published checksum matches the local APK.
